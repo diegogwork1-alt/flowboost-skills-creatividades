@@ -1,0 +1,327 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "Variaciones_Static_Ad_Audit_Rules_2026",
+ "description": "Copia al dia (11-09-2026) de las reglas de estaticos-meta, mas lo propio de las variaciones: ban_ai_people_and_backgrounds con la regla RECREAR SI / INVENTAR NO, e image_provenance (origen, fuente_id, licencia, persona_identificable) para que el stock sea un mecanismo y no una frase. Programmatic parameters and failure thresholds for B2B Meta Ads static creative review. FUENTE: playbook NotebookLM de Dirección (Digital Applied 2026, AdRiseLab 2026, 6sense 2025, SaaSHero 2026, Adrio 2026). NOTA FLOWBOOST: el sizing de abajo (feed 4:5 / 9:16 bottom 672) es el del playbook B2B; la REGLA DE LA CASA de Dirección lo sobreescribe -> tamanos 1:1 (1080x1080) + 9:16 (1080x1920), y 9:16 safe zone de trabajo = 270 arriba / 384 abajo (20%) / laterales: objetivo 107, minimo tecnico 65. Ver calidad-y-autoqc.md y reglas-tecnicas-y-copy.md.",
+ "type": "object",
+ "properties": {
+  "universal_parameters": {
+   "type": "object",
+   "properties": {
+    "placement_sizing": {
+     "type": "object",
+     "properties": {
+      "feed_dimensions": {
+       "type": "string",
+       "enum": [
+        "1080x1080"
+       ],
+       "description": "REGLA DE LA CASA: el feed de Flowboost es 1:1 (1080x1080). El playbook B2B original traia 1080x1350 (4:5); NO se usa, porque el mismo activo se sube a todas las ubicaciones. Ver reglas-tecnicas-y-copy.md S1."
+      },
+      "stories_reels_dimensions": {
+       "type": "string",
+       "enum": [
+        "1080x1920"
+       ]
+      },
+      "stories_reels_safe_zone": {
+       "type": "object",
+       "properties": {
+        "top_clearance_px": {
+         "type": "number",
+         "minimum": 269
+        },
+        "bottom_clearance_px": {
+         "type": "number",
+         "minimum": 384
+        },
+        "safe_area_box": {
+         "type": "string",
+         "enum": [
+          "1080x1266",
+          "950x979"
+         ]
+        }
+       },
+       "required": [
+        "top_clearance_px",
+        "bottom_clearance_px",
+        "safe_area_box"
+       ]
+      },
+      "_flowboost_override": {
+       "sizes": [
+        "1080x1080",
+        "1080x1920"
+       ],
+       "note": "Regla de la casa: 1:1 (1080x1080) + 9:16 (1080x1920) para todo. 9:16 working safe zone: top 270 / bottom 384 (20%). LATERALES: se pide 107 px (margen de composicion medido en las piezas aprobadas, refs/00_9x16-verticales/LEEME.md); 65 px es el minimo tecnico infranqueable, no el objetivo. 35%/672 solo si debe ser Reels-safe extremo. Entrega a 1080 exactos: no se interpola a 1440.",
+       "9x16_working_top_px": 270,
+       "9x16_working_bottom_px": 384,
+       "9x16_sides_px": 65,
+       "9x16_sides_target_px": 107,
+       "9x16_sides_hard_min_px": 65
+      }
+     },
+     "required": [
+      "feed_dimensions",
+      "stories_reels_dimensions",
+      "stories_reels_safe_zone"
+     ]
+    },
+    "text_density_limit": {
+     "type": "object",
+     "properties": {
+      "max_surface_area_percentage": {
+       "type": "number",
+       "maximum": 20
+      },
+      "exception_allowed_formats": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "enum": [
+         "Article / News",
+         "Review + Claim"
+        ]
+       },
+       "description": "NO son una exencion de Meta: Meta no exime a ningun formato (corregido 11-09-2026, contrastado con las fuentes). Quito la regla dura del 20% pero el algoritmo sigue penalizando entrega y CPM en cualquier imagen con mucho texto. En estos dos formatos lo que aguanta es el RENDIMIENTO, no la penalizacion: se acepta pasarse como coste asumido del formato (severidad IMPROVE en vez de REGENERATE), no como excepcion, y por eso no se estira mas de lo necesario."
+      }
+     },
+     "required": [
+      "max_surface_area_percentage",
+      "exception_allowed_formats"
+     ]
+    },
+    "contrast_ratio": {
+     "type": "object",
+     "properties": {
+      "min_wcag_aa_ratio": {
+       "type": "number",
+       "minimum": 4.5
+      },
+      "recommended_palettes": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "enum": [
+         "Turquoise on Navy",
+         "Orange on Navy",
+         "Black on White"
+        ]
+       }
+      }
+     },
+     "required": [
+      "min_wcag_aa_ratio",
+      "recommended_palettes"
+     ]
+    },
+    "export_specs": {
+     "type": "object",
+     "properties": {
+      "graphic_format": {
+       "type": "string",
+       "enum": [
+        "PNG"
+       ]
+      },
+      "photo_format": {
+       "type": "string",
+       "enum": [
+        "JPG"
+       ]
+      },
+      "min_shortest_side_px": {
+       "type": "number",
+       "minimum": 1080
+      },
+      "best_practice_shortest_side_px": {
+       "type": "number",
+       "minimum": 1440,
+       "description": "Del playbook original. En Flowboost NO se aplica subiendo la resolucion: la entrega es 1080 exactos (min_shortest_side_px). Solo vale si el generador ya devuelve 1440 o mas."
+      },
+      "max_file_size_mb": {
+       "type": "number",
+       "maximum": 30
+      }
+     },
+     "required": [
+      "graphic_format",
+      "photo_format",
+      "min_shortest_side_px",
+      "best_practice_shortest_side_px",
+      "max_file_size_mb"
+     ]
+    },
+    "hygiene_bans": {
+     "type": "object",
+     "properties": {
+      "ban_stock_photos": {
+       "type": "boolean",
+       "const": true,
+       "description": "Prohibido que una foto de stock aparezca TAL CUAL en la pieza final. SÍ está permitido usar stock libre como REFERENCIA para que el modelo recree la escena con la persona/el contexto del cliente: eso es el flujo normal de la casa. El REJECT es para el stock reconocible sin recrear, no para la referencia."
+      },
+      "ban_ai_copy_tells": {
+       "type": "array",
+       "items": {
+        "type": "string",
+        "enum": [
+         "delve",
+         "leverage",
+         "synergize",
+         "optimize your experience"
+        ]
+       }
+      },
+      "max_em_dashes_per_100_words": {
+       "type": "number",
+       "maximum": 2
+      },
+      "ban_ai_people_and_backgrounds": {
+       "type": "boolean",
+       "const": true,
+       "description": "RECREAR SI, INVENTAR NO (Dirección, 11-09-2026, precisado tras la auditoria). Lo prohibido es INVENTAR: una cara que no existe, una persona de ejemplo, o un fondo/escenario generado de cero sin imagen real debajo. SI esta permitido que el modelo RECREE una persona o una escena REAL que se le adjunta (material del cliente o stock gratuito elegido por nosotros), manteniendo rostro, pelo, gafas y edad: ese es el flujo normal de la casa y es coherente con ban_stock_photos, que prohibe el stock TAL CUAL pero permite usarlo como referencia para recrear. Si la cara generada no se parece a la referencia, el modelo invento una persona -> REGENERATE re-adjuntando la foto. Ver SKILL.md seccion 'RECREAR SI, INVENTAR NO'."
+      }
+     },
+     "required": [
+      "ban_stock_photos",
+      "ban_ai_copy_tells",
+      "max_em_dashes_per_100_words",
+      "ban_ai_people_and_backgrounds"
+     ]
+    },
+    "image_provenance": {
+     "type": "object",
+     "description": "Trazabilidad obligatoria del origen de cada imagen (no existia: el stock era una frase, no un mecanismo). Se anota por pieza en specs_Tanda<N>.md.",
+     "properties": {
+      "origen": {
+       "type": "string",
+       "enum": [
+        "material_cliente",
+        "captura_web_cliente",
+        "stock_gratuito"
+       ],
+       "description": "De donde sale la imagen real que el modelo recrea. No hay cuarta opcion."
+      },
+      "fuente_id": {
+       "type": "string",
+       "description": "Obligatorio si origen=stock_gratuito: banco + id (p. ej. 'Pexels 1234567'). Sin id no se puede justificar la licencia."
+      },
+      "licencia": {
+       "type": "string",
+       "description": "Licencia declarada del banco."
+      },
+      "persona_identificable": {
+       "type": "boolean",
+       "description": "true si se ve una cara reconocible. Si es true Y la pieza sugiere respaldo (testimonio, resena, cita con nombre), la pieza NO sale a campana sin cara y autorizacion del cliente real: Pexels/Unsplash/Pixabay no dan derechos para sugerir respaldo. Hasta entonces va con [REEMPLAZAR] quemado en el PNG."
+      }
+     },
+     "required": [
+      "origen",
+      "persona_identificable"
+     ]
+    },
+    "_mapa_de_formatos": {
+     "type": "object",
+     "description": "Las claves de maquina de este fichero (exception_allowed_formats, las reglas IF/THEN del playbook) van en INGLES porque vienen de la fuente; los formatos de la casa se nombran en ESPANOL. Es el mismo objeto. Equivalencias, para que nadie cree un formato nuevo por no reconocer el nombre:",
+     "properties": {
+      "Article / News": {
+       "const": "1 · Articulo/Noticia (advertorial)"
+      },
+      "Before / After": {
+       "const": "2 · Antes/Despues"
+      },
+      "Review + Claim": {
+       "const": "3 · Review+Claim — es lo que en la casa se llama TESTIMONIO cuando manda la voz del cliente"
+      },
+      "Feature / Benefit": {
+       "const": "4 · Caracteristica->Beneficio"
+      },
+      "Contrarian / Objections": {
+       "const": "5 · Responder objeciones/haters"
+      },
+      "Problem / Solution": {
+       "const": "6 · Resolver el pain"
+      },
+      "Offer / Scarcity": {
+       "const": "7 · Oferta/Escasez"
+      },
+      "Social Proof / Stat Drop": {
+       "const": "8 · Prueba social — es TESTIMONIO cuando manda la cifra"
+      },
+      "Guarantee / Risk Reversal": {
+       "const": "9 · Garantia"
+      },
+      "Three Steps": {
+       "const": "10 · Tres pasos — FUERA de la secuencia de 9; solo si Dirección lo pide"
+      }
+     },
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "placement_sizing",
+    "text_density_limit",
+    "contrast_ratio",
+    "export_specs",
+    "hygiene_bans"
+   ]
+  },
+  "audit_decisioning": {
+   "type": "object",
+   "properties": {
+    "severity_reject": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "stock_photos_detected",
+       "unsharp_pixelated_quality",
+       "competitor_trademarks_named",
+       "ai_copy_tells_present",
+       "file_size_exceeds_30mb"
+      ]
+     },
+     "description": "Severidades del playbook original. MATIZ DE LA CASA (audit-playbook-b2b.md, UNIVERSAL-VISUAL 6): unsharp_pixelated_quality es REJECT solo si el titular no se lee a 200 px de miniatura; si se lee, es Minor/OPTIMIZE y se rehace el export. file_size_exceeds_30mb sigue siendo REJECT."
+    },
+    "severity_regenerate": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "stories_reels_outside_safe_zone",
+       "text_overlay_exceeds_20_percent",
+       "contrast_ratio_below_4.5_to_1",
+       "multiple_benefits_diluted_ad",
+       "quote_exceeds_15_words",
+       "callouts_point_to_technical_labels",
+       "unrounded_rounded_metric_hype",
+       "full_dashboard_uncropped_mobile"
+      ]
+     },
+     "description": "quote_exceeds_15_words aplica al formato Review+Claim, que esta EXENTO del techo de 8 palabras (calidad-y-autoqc.md S0-quater). En el resto de formatos manda el techo, que es mas estricto."
+    },
+    "severity_optimize": {
+     "type": "array",
+     "items": {
+      "type": "string",
+      "enum": [
+       "press_logo_over_customer_count",
+       "generic_get_started_cta_used",
+       "polished_portrait_over_selfie",
+       "lack_of_dark_mode_variant"
+      ]
+     }
+    }
+   },
+   "required": [
+    "severity_reject",
+    "severity_regenerate",
+    "severity_optimize"
+   ]
+  }
+ },
+ "required": [
+  "universal_parameters",
+  "audit_decisioning"
+ ]
+}

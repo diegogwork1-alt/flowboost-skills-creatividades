@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ====== TOKENS (los rellena la skill desde la hoja de especificación) ====== */
+  :root{
+    --bg: {{BG}};            /* fondo de marca si no hay foto. MMS: #163a2c */
+    --accent: {{ACCENT}};    /* 1 color de acento de marca. MMS: #c4f14a */
+    --card: {{CARD}};        /* tarjeta de reseña. MMS: #f0483c */
+    --ink: #ffffff;
+    /* safe zones: las inyecta render.py según el tamaño (NO tocar a mano) */
+    --safe-top: 67px; --safe-bottom: 67px; --safe-x: 54px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1350px;overflow:hidden;position:relative}
+  body{background:var(--bg);color:var(--ink);
+       font-family:'Oswald','Arial Narrow',system-ui,sans-serif}
+  /* foto full-bleed (si hay {{PHOTO_BG}}) */
+  .bg{position:absolute;inset:0;background:var(--bg) center/cover no-repeat;
+      background-image:url('{{PHOTO_BG}}')}
+  /* overlay para contraste ≥4.5:1 del texto sobre la foto */
+  .overlay{position:absolute;inset:0;
+     background:linear-gradient(180deg, rgba(8,26,18,.72) 0%, rgba(8,26,18,.45) 42%, rgba(8,26,18,.82) 100%)}
+  /* TODO el contenido confinado a la SAFE ZONE */
+  .content{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);
+     left:var(--safe-x);right:var(--safe-x);display:flex;flex-direction:column}
+  .top{display:flex;justify-content:space-between;font-size:26px;letter-spacing:.06em;
+       text-transform:uppercase;opacity:.9}
+  .top .mid{font-weight:600}
+  .quote{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:1.0;
+         font-size:84px;margin-top:22px;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+  .quote .hl{color:var(--accent)}
+  .review{background:var(--card);border-radius:26px;padding:28px 32px;margin-top:30px;
+          display:flex;gap:22px;align-items:flex-start;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .review .ph{width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.35) center/cover;
+             background-image:url('{{PHOTO}}');flex:0 0 auto}
+  .stars{font-size:30px;letter-spacing:.12em}
+  .review p{font-size:28px;line-height:1.28;margin-top:6px}
+  .review .who{font-weight:700;margin-top:8px}
+  .benefits{margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:24px 40px}
+  .benefits div{font-size:29px;line-height:1.2}
+  .benefits b{display:block}
+  .cta{margin-top:auto;background:var(--accent);color:#0c2b1f;border-radius:70px;
+       font-family:'Anton',sans-serif;text-transform:uppercase;font-size:42px;text-align:center;
+       padding:28px 20px}
+  .social{text-align:center;font-weight:700;text-transform:uppercase;font-size:24px;
+          margin-top:22px;letter-spacing:.02em}
+  .badges{display:flex;justify-content:space-between;font-size:22px;font-weight:600;
+          text-transform:uppercase;letter-spacing:.04em;margin-top:18px;opacity:.92}
+  /* LOGO — va la IMAGEN REAL, nunca el nombre recompuesto con tipografía (regla de Dirección,
+     corregida dos veces). {{LOGO_SRC}} = ruta file:// o data URI del PNG oficial. Si llega
+     vacío, render.py AVISA: una marca escrita en Oswald no es el logo de nadie. */
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{height:46px;width:auto;display:block}
+  .brand img:not([src]),.brand img[src=""]{display:none}
+
+  /* ====== RECOMPOSICIÓN EN 9:16 (11-09-2026) ======
+     Estas maquetas se dibujaron para 4:5. Estiradas a 1080x1920, `.cta{margin-top:auto}` empujaba
+     el botón al fondo y dejaba 600-840 px de agujero en medio (38-44 % del lienzo). No se arregla
+     escalando: hay que RECOMPONER, y el patrón de la casa ya estaba medido en
+     `references/refs/00_9x16-verticales/LEEME.md`: **todo el texto en la mitad superior y la foto a
+     sangre por abajo**. Eso es lo que hacen estas reglas. */
+  body.size-story .content{bottom:auto;justify-content:flex-start}
+  body.size-story .cta{margin-top:38px}          /* el CTA SIGUE al contenido, no se va al fondo */
+  /* El degradado deja ver la foto en la mitad inferior, que es donde vive en el patrón de la casa */
+  body.size-story .overlay{background:linear-gradient(180deg,
+      rgba(8,16,26,.88) 0%, rgba(8,16,26,.80) 46%, rgba(8,16,26,.30) 64%, rgba(8,16,26,.55) 100%)}
+  /* Tipografía a la escala del lienzo alto: el mismo cuerpo que en 1:1 se ve diminuto */
+  body.size-story .quote{font-size:104px}
+  body.size-story .head{font-size:104px}
+  body.size-story .top{font-size:30px}
+  body.size-story .cta{font-size:48px;padding:32px 20px}
+  /* guías de safe zone para QA (render.py --guides las activa) */
+  /* 9:16 SIN foto de fondo: sin foto a sangre abajo, el contenido se reparte por toda la altura
+     en vez de dejar el tercio inferior vacío. */
+  body.size-story.sin-foto .content{bottom:var(--safe-bottom);justify-content:space-between}
+  body.size-story.sin-foto .cta{margin-top:0}
+  .guides{position:absolute;inset:0;pointer-events:none;display:none}
+  .guides .z{position:absolute;left:0;right:0;background:rgba(255,0,80,.22);
+             border-top:2px dashed #ff0050;border-bottom:2px dashed #ff0050}
+  .guides .safe{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);
+                left:var(--safe-x);right:var(--safe-x);border:2px dashed #00e5ff}
+  body.show-guides .guides{display:block}
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="content">
+    <div class="top"><span>{{YEAR}}</span><span class="mid">{{KICKER}}</span><span class="brand"><img src="{{LOGO_SRC}}" alt=""><span>{{BRAND}}</span></span></div>
+    <div class="quote">{{QUOTE}}</div>
+    <div class="review">
+      <div class="ph"></div>
+      <div>
+        <div class="stars">★★★★★</div>
+        <p>{{REVIEW_TEXT}}</p>
+        <div class="who">{{REVIEWER}}</div>
+      </div>
+    </div>
+    <div class="benefits">
+      <div><b>{{BENEFIT1_T}}</b>{{BENEFIT1_D}}</div>
+      <div><b>{{BENEFIT2_T}}</b>{{BENEFIT2_D}}</div>
+    </div>
+    <div class="cta">{{CTA}}</div>
+    <div class="social">{{SOCIALPROOF}}</div>
+    <div class="badges"><span>{{BADGE1}}</span><span>{{BADGE2}}</span><span>{{BADGE3}}</span></div>
+  </div>
+  <div class="guides"><div class="safe"></div>{{GUIDE_ZONES}}</div>
+</body>
+</html>

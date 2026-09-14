@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: {{BG}};  --accent: {{ACCENT}};  --ink: #ffffff;
+    /* safe zones: las inyecta render.py según el tamaño (NO tocar a mano) */
+    --safe-top: 67px; --safe-bottom: 67px; --safe-x: 54px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1350px;overflow:hidden;position:relative}
+  body{background:var(--bg);color:var(--ink);font-family:'Oswald','Arial Narrow',system-ui,sans-serif}
+  .bg{position:absolute;inset:0;background:var(--bg) center/cover no-repeat;
+      background-image:url('{{PHOTO_BG}}')}
+  .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,16,26,.86),rgba(8,16,26,.62) 45%,rgba(8,16,26,.9))}
+  .content{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);
+     left:var(--safe-x);right:var(--safe-x);display:flex;flex-direction:column}
+  /* LOGO — va la IMAGEN REAL, nunca el nombre recompuesto con tipografía (regla de Dirección). */
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{height:46px;width:auto;display:block}
+  .brand img:not([src]),.brand img[src=""]{display:none}
+  /* 9:16: texto arriba y foto a sangre abajo — el patrón medido de la casa. */
+  body.size-story .content{bottom:auto;justify-content:flex-start}
+  body.size-story .cta{margin-top:38px}
+  body.size-story .overlay{background:linear-gradient(180deg,
+      rgba(8,16,26,.88) 0%, rgba(8,16,26,.80) 46%, rgba(8,16,26,.30) 64%, rgba(8,16,26,.55) 100%)}
+  /* 9:16 SIN foto: se reparte por toda la altura en vez de dejar el tercio inferior muerto. */
+  body.size-story.sin-foto .content{bottom:var(--safe-bottom);justify-content:space-between}
+  body.size-story.sin-foto .cta{margin-top:0}
+  .guides{position:absolute;inset:0;pointer-events:none;display:none}
+  .guides .z{position:absolute;left:0;right:0;background:rgba(255,0,80,.22);
+             border-top:2px dashed #ff0050;border-bottom:2px dashed #ff0050}
+  .guides .safe{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);
+                left:var(--safe-x);right:var(--safe-x);border:2px dashed #00e5ff}
+  body.show-guides .guides{display:block}
+
+  /* ── Propio de este formato. Va AL FINAL: así sus reglas de 9:16 ganan a las genéricas. ── */
+  /* Sirve a 4 Característica→Beneficio (3 checks), 7 Oferta/Escasez (ítems + condición) y
+     9 Garantía (sellos). Cambia qué es la lista, no la estructura. */
+  .top{display:flex;justify-content:space-between;align-items:center;font-size:26px;
+       letter-spacing:.06em;text-transform:uppercase;opacity:.92}
+  .kicker{background:var(--accent);color:#0b0f14;border-radius:40px;padding:8px 22px;
+          font-weight:700;font-size:24px;letter-spacing:.08em}
+  .head{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:1.02;
+        font-size:88px;margin-top:24px}
+  .head .hl{color:var(--accent)}
+  .destacado{font-family:'Anton',sans-serif;font-size:132px;line-height:1;margin-top:18px;
+             color:var(--accent)}
+  /* JERARQUÍA DE LISTA (reglas-tecnicas-y-copy §3): la lista es el TERCER nivel, acento solo en la
+     palabra clave, y más aire ENTRE ítems que dentro. Es donde se empasta. */
+  .lista{margin-top:36px;display:flex;flex-direction:column;gap:26px}
+  .item{display:flex;gap:18px;align-items:flex-start;font-size:34px;line-height:1.25}
+  .item .ic{color:var(--accent);font-size:34px;flex:0 0 auto;line-height:1.25}
+  .item b{font-weight:700;color:var(--accent)}
+  .cta{margin-top:auto;background:var(--accent);color:#0b0f14;border-radius:70px;
+       font-family:'Anton',sans-serif;text-transform:uppercase;font-size:42px;text-align:center;
+       padding:28px 20px}
+  .pie{text-align:center;font-size:24px;text-transform:uppercase;letter-spacing:.04em;
+       margin-top:18px;opacity:.9}
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="content">
+    <div class="top"><span class="kicker">{{KICKER}}</span>
+      <span class="brand"><img src="{{LOGO_SRC}}" alt=""><span>{{BRAND}}</span></span></div>
+    <div class="head">{{HEAD}}</div>
+    <div class="destacado">{{DESTACADO}}</div>
+    <div class="lista">
+      <div class="item"><span class="ic">&#10003;</span><span><b>{{ITEM1_T}}</b> {{ITEM1_D}}</span></div>
+      <div class="item"><span class="ic">&#10003;</span><span><b>{{ITEM2_T}}</b> {{ITEM2_D}}</span></div>
+      <div class="item"><span class="ic">&#10003;</span><span><b>{{ITEM3_T}}</b> {{ITEM3_D}}</span></div>
+    </div>
+    <div class="cta">{{CTA}}</div>
+    <div class="pie">{{PIE}}</div>
+  </div>
+  <div class="guides"><div class="safe"></div>{{GUIDE_ZONES}}</div>
+</body>
+</html>

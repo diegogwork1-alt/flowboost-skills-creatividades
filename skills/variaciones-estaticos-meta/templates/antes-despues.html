@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: {{BG}};            /* fondo/marca. Cliente 04: #0b1f3a (navy) */
+    --accent: {{ACCENT}};    /* acento. Cliente 04: #e8b84b (dorado) */
+    --bad: #9aa3ad;          /* columna ANTES (apagada) */
+    --good: {{ACCENT}};      /* columna DESPUÉS */
+    --ink:#ffffff;
+    --safe-top:54px; --safe-bottom:54px; --safe-x:54px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1350px;overflow:hidden;position:relative}
+  body{background:var(--bg);color:var(--ink);font-family:'Oswald','Arial Narrow',system-ui,sans-serif}
+  .bg{position:absolute;inset:0;background:var(--bg) center/cover no-repeat;background-image:url('{{PHOTO_BG}}')}
+  .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,16,32,.82),rgba(6,16,32,.62) 45%,rgba(6,16,32,.9))}
+  .content{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);left:var(--safe-x);right:var(--safe-x);
+           display:flex;flex-direction:column}
+  .top{display:flex;justify-content:space-between;font-size:25px;text-transform:uppercase;letter-spacing:.06em;opacity:.9}
+  .head{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:1.0;font-size:76px;margin-top:18px;
+        text-shadow:0 2px 16px rgba(0,0,0,.4)}
+  .head .hl{color:var(--accent)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:34px}
+  .col{background:rgba(255,255,255,.08);border-radius:22px;padding:26px 26px}
+  .col.after{background:rgba(232,184,75,.16);border:2px solid var(--accent)}
+  .col .lbl{display:inline-block;font-family:'Anton',sans-serif;text-transform:uppercase;font-size:30px;
+            padding:6px 18px;border-radius:8px;margin-bottom:14px}
+  .col.before .lbl{background:#2a3547;color:#dfe5ec}
+  .col.after .lbl{background:var(--accent);color:#0b1f3a}
+  .col ul{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .col li{font-size:28px;line-height:1.22;display:flex;gap:12px;align-items:flex-start}
+  .col.before li::before{content:"✕";color:var(--bad);font-weight:700}
+  .col.after li::before{content:"✓";color:var(--accent);font-weight:700}
+  .cta{margin-top:auto;background:var(--accent);color:#0b1f3a;border-radius:70px;font-family:'Anton',sans-serif;
+       text-transform:uppercase;font-size:40px;text-align:center;padding:26px 20px}
+  .brand{display:flex;justify-content:center;align-items:center;margin-top:22px}
+  .brand span{font-family:'Playfair Display',Georgia,serif;font-weight:700;font-size:40px;
+              text-transform:uppercase;letter-spacing:.28em;color:#fff;text-indent:.28em}
+  /* LOGO — va la IMAGEN REAL, nunca el nombre recompuesto con tipografía (regla de Dirección,
+     corregida dos veces). {{LOGO_SRC}} = ruta file:// o data URI del PNG oficial. Si llega
+     vacío, render.py AVISA: una marca escrita en Playfair no es el logo de nadie. */
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center}
+  .brand img{height:46px;width:auto;display:block}
+  .brand img:not([src]),.brand img[src=""]{display:none}
+
+  /* ====== RECOMPOSICIÓN EN 9:16 (11-09-2026) ======
+     Estas maquetas se dibujaron para 4:5. Estiradas a 1080x1920, `.cta{margin-top:auto}` empujaba
+     el botón al fondo y dejaba 600-840 px de agujero en medio (38-44 % del lienzo). No se arregla
+     escalando: hay que RECOMPONER, y el patrón de la casa ya estaba medido en
+     `references/refs/00_9x16-verticales/LEEME.md`: **todo el texto en la mitad superior y la foto a
+     sangre por abajo**. Eso es lo que hacen estas reglas. */
+  body.size-story .content{bottom:auto;justify-content:flex-start}
+  body.size-story .cta{margin-top:38px}          /* el CTA SIGUE al contenido, no se va al fondo */
+  body.size-story .overlay{background:linear-gradient(180deg,
+      rgba(8,16,26,.88) 0%, rgba(8,16,26,.80) 46%, rgba(8,16,26,.30) 64%, rgba(8,16,26,.55) 100%)}
+  body.size-story .quote{font-size:104px}
+  body.size-story .head{font-size:104px}
+  body.size-story .top{font-size:30px}
+  body.size-story .cta{font-size:48px;padding:32px 20px}
+  /* 9:16 SIN foto de fondo: sin foto a sangre abajo, el contenido se reparte por toda la altura
+     en vez de dejar el tercio inferior vacío. */
+  body.size-story.sin-foto .content{bottom:var(--safe-bottom);justify-content:space-between}
+  body.size-story.sin-foto .cta{margin-top:0}
+  .guides{position:absolute;inset:0;pointer-events:none;display:none}
+  .guides .z{position:absolute;left:0;right:0;background:rgba(255,0,80,.22);border-top:2px dashed #ff0050;border-bottom:2px dashed #ff0050}
+  .guides .safe{position:absolute;top:var(--safe-top);bottom:var(--safe-bottom);left:var(--safe-x);right:var(--safe-x);border:2px dashed #00e5ff}
+  body.show-guides .guides{display:block}
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="content">
+    <div class="top"><span>{{KICKER}}</span><span>{{BRAND}}</span></div>
+    <div class="head">{{HEAD}}</div>
+    <div class="cols">
+      <div class="col before">
+        <span class="lbl">{{ANTES_LBL}}</span>
+        <ul><li>{{ANTES1}}</li><li>{{ANTES2}}</li><li>{{ANTES3}}</li></ul>
+      </div>
+      <div class="col after">
+        <span class="lbl">{{DESPUES_LBL}}</span>
+        <ul><li>{{DESPUES1}}</li><li>{{DESPUES2}}</li><li>{{DESPUES3}}</li></ul>
+      </div>
+    </div>
+    <div class="cta">{{CTA}}</div>
+    <div class="brand"><img src="{{LOGO_SRC}}" alt=""><span>{{BRAND}}</span></div>
+  </div>
+  <div class="guides"><div class="safe"></div>{{GUIDE_ZONES}}</div>
+</body>
+</html>
