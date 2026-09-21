@@ -12,7 +12,10 @@ import csv, datetime as dt, glob, json, os, re, subprocess
 
 CLIENTES = os.path.expanduser("~/Desktop/CLIENTES")
 # Carpeta de descargas de Chrome en esta máquina (ver estaticos-meta/SKILL.md §Fase 4).
-DESCARGAS = os.environ.get("CHROME_DESCARGAS", os.path.expanduser("~/Desktop/Cliente 25"))
+# Carpeta donde Chrome deja las descargas. En el Mac de Dirección es «Cliente 25»; en cualquier otro
+# ordenador (Windows incluido) es la carpeta Descargas normal. CHROME_DESCARGAS manda sobre las dos.
+_CHAU = os.path.expanduser("~/Desktop/Cliente 25")
+DESCARGAS = os.environ.get("CHROME_DESCARGAS") or (_CHAU if os.path.isdir(_CHAU) else os.path.expanduser("~/Downloads"))
 SKILLS = os.path.expanduser("~/.claude/skills")
 
 

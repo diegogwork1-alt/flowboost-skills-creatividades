@@ -7,7 +7,7 @@
 
 Director Creativo Ejecutivo autónomo de estáticos de Meta Ads para clientes de Flowboost (B2C y B2B). Replica el sistema del GPT de Dirección "Generador Ads Imagen": minimalismo extremo (1 idea, ≤8 palabras), la marca como fuente de verdad, Breakthrough Advertising (Schwartz), la secuencia de 9 formatos, y GENERA la imagen final (no prompts).
 
-## Antes de empezar necesitás
+## Antes de empezar necesitas
 
 - **El paquete `fundamentos` instalado al lado** (`npx skills add <usuario-github>/flowboost-skills-fundamentos --copy`). Esta skill lee Ogilvy, Schwartz y el compliance de Meta desde `../fundamentos-copy/`. **Si no está, la skill funciona a medias y NO avisa.**
 - La skill **`armar-campana-meta`** (paquete *meta-ads*): lee ficheros suyos.
@@ -61,4 +61,4 @@ Google Drive del cliente (solo lectura salvo entregables), cuenta de Meta Ads �
 
 ---
 
-*Generado el 10-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
+*Generado el 21-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*

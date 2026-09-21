@@ -40,6 +40,23 @@ REQUISITOS = [
     ("ffmpeg",    lambda: _hay("ffmpeg"),  "brew install ffmpeg     (solo para editar vídeo)"),
 ]
 
+# Paquete de VÍDEO: la edición necesita bastante más que ffmpeg. La lista completa y el paso a paso están
+# en skills/editar-vsl-cliente/INSTALACION.md; aquí solo se comprueba lo imprescindible para arrancar.
+if os.path.basename(AQUI).endswith("-video"):
+    REQUISITOS += [
+        ("librerías de edición (numpy, pillow, imageio-ffmpeg, svg.path, opencv, faster-whisper)",
+         lambda: all(_py(m) for m in ("numpy", "PIL", "imageio_ffmpeg", "svg.path", "cv2", "faster_whisper")),
+         "python3 -m pip install --user numpy pillow imageio-ffmpeg svg.path opencv-python-headless faster-whisper static-ffmpeg"),
+        ("ffprobe", lambda: _hay("ffprobe") or os.path.exists(os.path.expanduser("~/.local/bin/ffprobe")),
+         "ver INSTALACION.md, paso 4"),
+        ("ffmpeg-skill (QC y checks de Reels)",
+         lambda: os.path.isfile(os.path.expanduser("~/.claude/tools/ffmpeg-skill/scripts/check.py")),
+         "git clone https://github.com/kajisho5/ffmpeg-skill.git ~/.claude/tools/ffmpeg-skill"),
+        ("MoneyPrinterTurbo (b-roll)",
+         lambda: os.path.isfile(os.path.expanduser("~/Desktop/MoneyPrinterTurbo/.venv/bin/python")),
+         "INSTALACION.md, paso 8"),
+    ]
+
 
 def area():
     """El nombre del área a partir del nombre de la carpeta."""
@@ -153,6 +170,9 @@ def instalar():
         print("      No es obligatorio: sin ellos, esas referencias concretas no se pueden abrir,")
         print("      pero el resto funciona. Si trabajas también esas áreas, instálalos.")
     print("  Cuando termines, dile a Claude: «guíame en la primera configuración»")
+    if area() == "video":
+        print("  Para EDITAR: sigue skills/editar-vsl-cliente/INSTALACION.md y comprueba con")
+        print("      python3 ~/.claude/skills/editar-vsl-cliente/scripts/comprobar_entorno_edicion.py")
     print("  ─────────────────────────────────────────────\n")
     return 1 if faltan else 0
 

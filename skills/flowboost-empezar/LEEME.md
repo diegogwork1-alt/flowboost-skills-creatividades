@@ -7,7 +7,7 @@
 
 Guía la PRIMERA configuración de alguien que acaba de instalar las skills de Flowboost. Comprueba qué hay en su ordenador (rclone, Drive, Python, ffmpeg), le conecta el Google Drive de la agencia paso a paso, verifica que funciona de verdad leyendo una carpeta real, y le explica qué puede pedir ya y qué no.
 
-## Antes de empezar necesitás
+## Antes de empezar necesitas
 
 - Nada externo: es autónoma.
 
@@ -28,4 +28,4 @@ Google Drive del cliente (solo lectura salvo entregables), Chrome con sesión de
 
 ---
 
-*Generado el 10-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
+*Generado el 21-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*

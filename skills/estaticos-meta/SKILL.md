@@ -365,8 +365,8 @@ material fresco.
 
 > ### ⛔ ESTA SKILL NO DECIDE QUÉ SE PUBLICA
 > **La tanda es INVENTARIO.** Cuántos anuncios se activan, en qué conjunto y con qué mezcla **lo decide
-> la skill de campaña** (`armar-campana-meta` / `gestion-cuenta-meta`) aplicando los parámetros: 3-5
-> anuncios activos por conjunto, arquitectura según presupuesto, cobertura de embudo y diversidad de
+> la skill de campaña** (`armar-campana-meta` / `gestion-cuenta-meta`) aplicando los parámetros: sistema
+> bifásico SANDBOX + ESCALADO (`parametros-campana.md` §2 y §15), arquitectura según presupuesto, cobertura de embudo y diversidad de
 > concepto. **Aquí se produce y se entrega; no se elige qué sale ni cuándo.**
 
 **Lo que SÍ hay que hacer para que la skill de campaña pueda decidir: ETIQUETAR cada pieza.**
@@ -383,8 +383,8 @@ Sin esas etiquetas la campaña no puede elegir bien y acabará subiendo lo prime
 
 ## ⚠️ LO QUE PRODUCIMOS NO ES LO QUE CORRE (vacío detectado 07-09-2026)
 Desde el cambio en las campañas, **solo van 3-5 anuncios ACTIVOS por conjunto** (`../gestion-cuenta-meta/references/parametros-campana.md` §6). Nosotros producimos **14 piezas al mes** (5 vídeos EGC + 9 estáticos). No es un desajuste: es cómo tiene que funcionar.
-- **La tanda alimenta un POOL, no una campaña.** Se arranca con **3-5 anuncios** (mezcla de vídeo y estático, **de conceptos distintos**) y **el resto queda en reserva**.
-- **En la revisión semanal se pausa el peor (20-25 % del conjunto) y entran 1-2 de la reserva** — el número y el ritmo los manda `../gestion-cuenta-meta/references/parametros-campana.md` §9, **aquí no se duplican**. *(Corregido el 11-09-2026: esta línea decía «cada semana entra uno», rebajando a la baja la regla de la skill que cita, que dice 1-2 semanal y una hipótesis nueva cada 2 semanas. Y sobre ese número se apoyaba el argumento de cuánto hay que producir.)* Así se prueba todo el pool sin fragmentar la señal.
+- **La tanda alimenta un POOL, no una campaña.** *(Actualizado el 16-09-2026: sistema bifásico.)* Se arranca con **3 conceptos distintos en el SANDBOX** (dolor, transformación, prueba social; 1 texto + 1 título cada uno) y **el resto queda en reserva** para los ciclos semanales (2-3 conceptos por semana, `parametros-campana.md` §15-ter).
+- *(Regla anterior al 16-09-2026: ahora lo nuevo entra por el SANDBOX y solo lo graduado pasa al escalado.)* **En la revisión semanal se pausa el peor (20-25 % del conjunto) y entran 1-2 de la reserva** — el número y el ritmo los manda `../gestion-cuenta-meta/references/parametros-campana.md` §9, **aquí no se duplican**. *(Corregido el 11-09-2026: esta línea decía «cada semana entra uno», rebajando a la baja la regla de la skill que cita, que dice 1-2 semanal y una hipótesis nueva cada 2 semanas. Y sobre ese número se apoyaba el argumento de cuánto hay que producir.)* Así se prueba todo el pool sin fragmentar la señal.
 - **Por eso la DIVERSIDAD DE CONCEPTO importa más que el volumen:** Meta agrupa los anuncios por el ángulo de fondo, así que **cinco variaciones del mismo ángulo cuentan como UNA apuesta, no como cinco**. Producir 14 piezas de 3 conceptos es producir 3 apuestas.
 - **Consecuencia práctica al elegir qué sube primero:** los 3-5 que arrancan tienen que ser **de conceptos distintos entre sí**, no los 3 mejores del mismo ángulo.
 

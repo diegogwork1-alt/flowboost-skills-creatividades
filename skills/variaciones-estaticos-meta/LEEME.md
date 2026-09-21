@@ -7,7 +7,7 @@
 
 Hace VARIACIONES de un estático de Meta que ya existe, en vez de crear uno desde cero. Dirección pasa la pieza de referencia y la skill devuelve variaciones claras del MISMO formato y el MISMO ángulo, cambiando todo lo demás — fondo, foto, composición, redacción.
 
-## Antes de empezar necesitás
+## Antes de empezar necesitas
 
 - **El paquete `fundamentos` instalado al lado** (`npx skills add <usuario-github>/flowboost-skills-fundamentos --copy`). Esta skill lee Ogilvy, Schwartz y el compliance de Meta desde `../fundamentos-copy/`. **Si no está, la skill funciona a medias y NO avisa.**
 - La skill **`armar-campana-meta`** (paquete *meta-ads*): lee ficheros suyos.
@@ -63,4 +63,4 @@ Google Drive del cliente (solo lectura salvo entregables), Chrome con sesión de
 
 ---
 
-*Generado el 10-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
+*Generado el 21-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*

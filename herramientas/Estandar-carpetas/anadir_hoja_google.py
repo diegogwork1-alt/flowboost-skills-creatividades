@@ -49,11 +49,15 @@ COLS_G = [("Semana", 22, "left"), ("Inversión", 13, "right"), ("Impresiones", 1
           ("Clics", 11, "right"), ("CTR", 10, "right"), ("CPC medio", 12, "right"),
           ("Cuota de impresiones", 20, "right"), ("Clientes potenciales", 20, "right"),
           ("Coste por lead", 15, "right"), ("Cierres (a mano)", 17, "right"),
-          ("Facturado", 15, "right"), ("Coste total", 14, "right"), ("ROAS", 11, "right"), ("ROAS mínimo", 14, "right"),
+          ("Facturado (a mano)", 18, "right"), ("Facturado", 15, "right"), ("Coste total", 14, "right"), ("ROAS", 11, "right"), ("ROAS mínimo", 14, "right"),
           ("Origen", 12, "center")]
-# La única columna que se escribe A MANO, igual que en el reporte de Meta: se pone el NÚMERO
-# de cierres de esa semana, no un porcentaje. Si cambia de sitio, cambiar CIERRES_COL_G.
-CIERRES_COL_G = "J"
+# Las DOS columnas que se escriben a mano, igual que en el reporte de Meta: el NÚMERO de
+# cierres de esa semana y el IMPORTE facturado. Sus letras se DEDUCEN de COLS_G: estaban
+# escritas a pelo («CIERRES_COL_G = "J"») y al meter una columna nueva delante habrían
+# seguido apuntando a la de al lado sin dar ningún error.
+X_G = {n: get_column_letter(i + 1) for i, (n, _, _) in enumerate(COLS_G)}
+CIERRES_COL_G = X_G["Cierres (a mano)"]
+MANUAL_COL_G = X_G["Facturado (a mano)"]
 
 DATOS_G = ["id", "fecha", "cliente", "campana", "coste", "impresiones", "clics", "ctr",
            "cpc", "conversiones", "valor_conversion", "cuota_impresiones", "actualizado"]
@@ -122,11 +126,13 @@ def formulas_g(ini, fin, fila):
     #   3. la estimación                          → leads × % de cierre × ticket medio
     # Nunca se suman: manda uno y punto, y la columna «Origen» dice cuál.
     cie = f"${CIERRES_COL_G}{fila}"
+    man = f"${MANUAL_COL_G}{fila}"
     fac = (f'IF({nvent}>0,{vent},'
+           f'IF(N({man})>0,N({man}),'
            f'IF(N({cie})>0,N({cie})*{TICKET},'
-           f'IF(OR({TICKET}=0,{CIERRE}=0),0,{conv}*{CIERRE}*{TICKET})))')
+           f'IF(OR({TICKET}=0,{CIERRE}=0),0,{conv}*{CIERRE}*{TICKET}))))')
     origen = (f'IF(B{fila}=0,"—",IF({nvent}>0,"ventas",'
-              f'IF(N({cie})>0,"a mano","estimado")))')
+              f'IF(OR(N({man})>0,N({cie})>0),"a mano","estimado")))')
     return [
         (f"={gs}", EURG), (f"={im}", ENTG), (f"={cl}", ENTG),
         (f"=IFERROR({cl}/{im},0)", PCTG),
@@ -135,6 +141,7 @@ def formulas_g(ini, fin, fila):
         (f"={conv}", ENTG),
         (f"=IFERROR({gs}/{conv},0)", EURG),
         ("__A_MANO__", ENTG),                 # «Cierres (a mano)»: hueco, no fórmula
+        ("__A_MANO__", EURG),                 # «Facturado (a mano)»: el otro hueco
         (f"={fac}", EURG),
         (f"=B{fila}", EURG),                        # Coste total de la SEMANA = su inversión
         (f"=IFERROR(K{fila}/L{fila},0)", ROASG),    # ROAS sobre el COSTE TOTAL, no la inversión

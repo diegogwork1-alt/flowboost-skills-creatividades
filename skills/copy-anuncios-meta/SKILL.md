@@ -4,7 +4,7 @@ description: Escribe el COPY de un anuncio de Meta (texto primario + título + d
 ---
 
 
-> 📐 **PARÁMETROS DE COPY DE LANDING, CON SU FUENTE:** `../fundamentos-copy/references/parametros-landing.md`. Ahí están una sola vez y **con la fuente de cada una** las reglas que antes estaban repartidas y desiguales entre las 9 skills de landing: frases ≤15 palabras · párrafos ≤2 oraciones · **prohibido el guion largo (—)** · el titular responde «¿por qué me importa?» · **2-3 testimonios reales** y nunca en carrusel en móvil · **nunca «sin compromiso» ni «gratis»** bajo el CTA · y **qué cifras NO están en las fuentes** (los umbrales de Core Web Vitals y el impacto de la velocidad en conversión: si alguien las cita como dato propio, es una alucinación).
+> 📐 **PARÁMETROS DE COPY DE LANDING, CON SU FUENTE:** `../fundamentos-copy/references/parametros-landing.md`. Ahí están una sola vez y **con la fuente de cada una** las reglas que antes estaban repartidas y desiguales entre las 9 skills de landing: frases ≤15 palabras · párrafos ≤2 oraciones · **prohibido el guion largo (—)** · el titular responde «¿por qué me importa?» · **2-3 testimonios reales** y nunca en carrusel en móvil · **nunca «sin compromiso» ni «gratis»** bajo el CTA · **muletillas de IA prohibidas** («potenciar», «llevar al siguiente nivel», «sin fisuras»…) · y **qué cifras NO están en las fuentes** (los umbrales de Core Web Vitals y el impacto de la velocidad en conversión: si alguien las cita como dato propio, es una alucinación).
 # Copy de anuncios para Meta (desde el estático + el guion)
 
 > **Idioma (regla dura de Dirección):** todo texto destinado al cliente o a su público sale en **español de España** (tuteo tú/vosotros, léxico de España). Cero voseo ni léxico LATAM (❌ vos/tenés/agendá/celular → ✅ tú/tienes/reserva/móvil). Única excepción: clientes cuyo mercado no sea España (hoy Cliente 07, en inglés).
@@ -59,7 +59,7 @@ Notas: (qué del estático/guion se usó; [FALTA] si hubo huecos)
 - Coherencia total estático ↔ guion ↔ copy (mismo ángulo y promesa).
 
 ## Variantes para testear
-Por defecto 2-3 variantes de texto primario y de título (distinto ángulo/énfasis del MISMO mensaje real, no claims nuevos). Sirven para que Meta optimice.
+Por defecto 2-3 variantes de texto primario y de título (distinto ángulo/énfasis del MISMO mensaje real, no claims nuevos). **Desde el 16-09-2026 no se cargan juntas en un anuncio:** `armar-campana-meta` sube **la variante A** (1 texto + 1 título) al SANDBOX y las demás se prueban después como anuncios nuevos. Por eso la **A tiene que ser la mejor**.
 **Nomenclatura fija:** las variantes se nombran A/B/C y quedan atadas al anuncio: `AnuncioN-copyA`, `AnuncioN-copyB`. Si el video editado tiene variantes de hook (hookA/hookB), el copy A acompaña al hook A, etc. — misma letra, mismo ángulo.
 
 ## Idioma

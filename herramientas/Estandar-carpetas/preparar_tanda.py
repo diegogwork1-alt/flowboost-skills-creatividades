@@ -156,8 +156,15 @@ def brief_a_txt(src, cli, ins):
         import fitz
         texto = "\n".join(p.get_text() for p in fitz.open(src))
     elif ext == ".docx":
-        r = subprocess.run(["textutil", "-convert", "txt", "-stdout", src], capture_output=True, text=True)
-        texto = r.stdout
+        if shutil.which("textutil"):   # Mac
+            r = subprocess.run(["textutil", "-convert", "txt", "-stdout", src], capture_output=True, text=True)
+            texto = r.stdout
+        else:                          # Windows/Linux: no hay textutil → se lee el XML del .docx con Python puro
+            import zipfile, html as _h
+            xml = zipfile.ZipFile(src).read("word/document.xml").decode("utf-8", "replace")
+            xml = re.sub(r"</w:p>", "\n", xml)
+            xml = re.sub(r"<w:tab/>", "\t", xml)
+            texto = _h.unescape(re.sub(r"<[^>]+>", "", xml))
     else:
         return None, 0
     texto = re.sub(r"\n{3,}", "\n\n", texto.replace("\x0c", "\n")).strip() + "\n"

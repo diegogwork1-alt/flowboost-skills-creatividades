@@ -32,7 +32,7 @@ La salida dice qué le falta. **Se resuelve de arriba abajo**, en ese orden.
 | **Python 3** | Ya viene en el Mac. Si falla de verdad: `brew install python` |
 | **rclone** | `brew install rclone` — es lo que conecta con el Drive |
 | **openpyxl** | `pip3 install openpyxl` — solo si va a tocar hojas de reportes |
-| **ffmpeg** | `brew install ffmpeg` — **solo** si va a editar vídeo. Si no, se salta |
+| **ffmpeg** | `brew install ffmpeg` — **solo** si va a editar vídeo (y entonces, todo lo de `editar-vsl-cliente/INSTALACION.md`). Si no, se salta |
 
 Si no tiene Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
@@ -86,7 +86,7 @@ Preguntarle **de qué se va a encargar** y montar solo lo suyo. No se le pide na
 | **Campañas o reportes** | acceso de lectura a Meta Ads | Dirección lo añade al Business Manager |
 | **Reportes** | nada más: las hojas ya están en el Drive | — |
 | **Estáticos** | la cuenta de ChatGPT de la agencia | Dirección. ⚠️ **Nunca la cuenta `<correo-direccion>`** |
-| **Vídeo** | `ffmpeg` y espacio en disco | él mismo |
+| **Vídeo** | bastante más que `ffmpeg`: librerías de Python, modelo de transcripción, herramientas de QC, MoneyPrinterTurbo con **su** clave de Pexels y ~8 GB de disco. **Se sigue `editar-vsl-cliente/INSTALACION.md` paso a paso** y se comprueba con `python3 ~/.claude/skills/editar-vsl-cliente/scripts/comprobar_entorno_edicion.py` | él mismo (la clave de Pexels la pone él, nunca por chat) |
 | **Landings** | acceso al hosting del cliente | Dirección, cuando toque publicar |
 
 ⚠️ **Nunca se le piden contraseñas ni claves por chat, ni se las teclea el agente.** Si algo

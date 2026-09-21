@@ -16,8 +16,14 @@ Uso:
 """
 import argparse, os, shutil, signal, subprocess, sys, tempfile, time
 
+WIN = os.name == "nt"
 CHROMES = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    # Windows (15-09-2026): antes solo se buscaba en rutas de Mac y en Windows no se encontraba Chrome
+    os.path.join(os.environ.get("PROGRAMFILES", ""), "Google", "Chrome", "Application", "chrome.exe"),
+    os.path.join(os.environ.get("PROGRAMFILES(X86)", ""), "Google", "Chrome", "Application", "chrome.exe"),
+    os.path.join(os.environ.get("LOCALAPPDATA", ""), "Google", "Chrome", "Application", "chrome.exe"),
+    shutil.which("chrome") or "",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     shutil.which("google-chrome") or "", shutil.which("chromium") or "",
 ]
@@ -36,7 +42,8 @@ def render(entrada, salida, size=None, espera=45, budget=12000):
     if os.path.exists(salida):
         os.unlink(salida)
     perfil = tempfile.mkdtemp(prefix="chrome-render-")
-    url = entrada if "://" in entrada else "file://" + os.path.abspath(entrada)
+    import pathlib
+    url = entrada if "://" in entrada else pathlib.Path(os.path.abspath(entrada)).as_uri()   # C:\… bien formado en Windows
     cmd = [find_chrome(), "--headless=old", "--disable-gpu", "--hide-scrollbars",
            "--no-first-run", "--no-default-browser-check",
            f"--user-data-dir={perfil}", f"--virtual-time-budget={budget}"]
@@ -48,8 +55,12 @@ def render(entrada, salida, size=None, espera=45, budget=12000):
             cmd += [f"--window-size={size}"]
     cmd.append(url)
 
-    p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         start_new_session=True)   # sesión propia → se puede matar el árbol
+    if WIN:
+        p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    else:
+        p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)   # sesión propia → se puede matar el árbol
     try:
         # Se espera al FICHERO, no al proceso: Chrome headless a menudo no sale nunca.
         t0, estable = time.time(), 0
@@ -70,10 +81,13 @@ def render(entrada, salida, size=None, espera=45, budget=12000):
     finally:
         # PASE LO QUE PASE: matar el árbol entero y borrar el perfil.
         try:
-            os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-            time.sleep(0.6)
-            os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-        except (ProcessLookupError, PermissionError):
+            if WIN:   # en Windows no hay killpg: taskkill /T mata el árbol entero
+                subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"], capture_output=True)
+            else:
+                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                time.sleep(0.6)
+                os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, OSError):
             pass
         shutil.rmtree(perfil, ignore_errors=True)
     return salida

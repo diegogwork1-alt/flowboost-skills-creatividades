@@ -119,6 +119,10 @@ def normalizar(origen, salida=None, size=None):
     w, h = src.size
     antes = credencial_en_bytes(origen_raw) or credencial(src.info)
     destino = tuple(int(x) for x in size.lower().split("x")) if size else destino_casa(w, h)
+    # Solo se escala lo que YA es 1:1 o 9:16 (el GPT entrega 1254² o 941×1672). Un 4:5 o un 16:9 no se
+    # estira a 9:16 en silencio: se deforma la pieza entera (prueba en seco, 13-09-2026).
+    if not size and min(abs(w / h - 1), abs(w / h - 9 / 16)) > 0.03:
+        raise SystemExit(f"✗ {os.path.basename(origen)} es {w}x{h}: no es 1:1 ni 9:16 y no se estira. Pídele al GPT el ratio correcto.")
 
     # Los metadatos se copian a mano: PIL no los arrastra al guardar.
     info = PngImagePlugin.PngInfo()

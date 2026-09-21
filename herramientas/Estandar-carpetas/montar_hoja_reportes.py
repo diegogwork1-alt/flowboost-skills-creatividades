@@ -19,7 +19,7 @@ Uso:
   python3 montar_hoja_reportes.py --cliente Cliente 02 --cuenta 1438... --anio 2026 \\
       --carpeta-id <ID> [--datos datos.json] [--desde-mes 9]
 """
-import argparse, calendar, json, os, sys, tempfile, urllib.parse
+import argparse, calendar, datetime, json, os, sys, tempfile, urllib.parse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
@@ -64,7 +64,13 @@ COLS_BASE = [("Semana", 22, "left"), ("Inversión", 13, "right"), ("Impresiones"
         ("CTR", 10, "right"),
         ("Clics en el enlace", 17, "right"), ("Clientes potenciales", 20, "right"),
         ("Coste por lead", 15, "right"), ("Coste por clic", 15, "right"),
-        ("Cierres (a mano)", 17, "right"), ("Facturado", 15, "right"),
+        ("Cierres (a mano)", 17, "right"),
+        # Lo que se FACTURÓ de verdad esa semana. Antes Equipo lo escribía ENCIMA de la
+        # fórmula de «Facturado», y eso se perdía al regenerar y además impedía calcular el
+        # ticket medio: si el ticket saliera de una columna que a su vez depende del ticket,
+        # Sheets da referencia circular. Con una columna propia, lo escrito a mano no depende
+        # de nada y el ticket se puede deducir de ella (Dirección, 15-09-2026).
+        ("Facturado (a mano)", 18, "right"), ("Facturado", 15, "right"),
         ("Coste total", 14, "right"),
         ("ROAS", 11, "right"), ("ROAS mínimo", 14, "right"),
         ("Origen", 12, "center")]
@@ -81,7 +87,7 @@ COLS_BASE = [("Semana", 22, "left"), ("Inversión", 13, "right"), ("Impresiones"
 # separar: por eso las campañas TIENEN que llevar la marca de su funnel en el nombre.
 FUNNELS = []
 N_ETIQ = 1          # columnas de etiqueta a la izquierda: «Semana» (+ «Funnel» si hay)
-COLS, X, DESTACADAS, CIERRES_COL, ORIGEN_COL = [], {}, set(), "", ""
+COLS, X, DESTACADAS, CIERRES_COL, MANUAL_COL, ORIGEN_COL = [], {}, set(), "", "", ""
 
 
 def _configurar(funnels=None):
@@ -90,7 +96,7 @@ def _configurar(funnels=None):
     Las letras de columna nunca se escriben a mano (ver el aviso de más abajo): con la
     columna «Funnel» delante, todas se corren una posición y cualquier «K» suelta apuntaría
     a la columna de al lado sin dar error."""
-    global FUNNELS, N_ETIQ, COLS, X, DESTACADAS, CIERRES_COL, ORIGEN_COL
+    global FUNNELS, N_ETIQ, COLS, X, DESTACADAS, CIERRES_COL, MANUAL_COL, ORIGEN_COL
     FUNNELS = list(funnels or [])
     COLS = list(COLS_BASE)
     if FUNNELS:
@@ -99,6 +105,7 @@ def _configurar(funnels=None):
     X = {n: get_column_letter(i + 1) for i, (n, _, _) in enumerate(COLS)}
     DESTACADAS = {X["Coste por lead"], X["Coste por clic"]}
     CIERRES_COL = X["Cierres (a mano)"]
+    MANUAL_COL = X["Facturado (a mano)"]
     ORIGEN_COL = X["Origen"]
 
 
@@ -142,12 +149,30 @@ def F(ws, ref, valor, *, tam=10, bold=False, color=NEGRO, fondo=None,
     return c
 
 
+# Desde SEPTIEMBRE de 2026 la semana va de LUNES A DOMINGO (Equipo, 15-09-2026): el informe
+# se lee por semana natural, y los bloques fijos de 7 días partían los lunes por la mitad.
+# Los meses ANTERIORES se quedan como estaban: ya se enseñaron así, y recolocarlos movería
+# filas de meses cerrados sin que nadie lo haya pedido.
+LUNES_DESDE = (2026, 9)
+
+
 def semanas(anio, mes):
-    """(etiqueta, primer día, último día) — bloques de 7 días; el último se ajusta al mes."""
+    """(etiqueta, primer día, último día).
+
+    Hasta agosto de 2026: bloques fijos de 7 días (1-7, 8-14, 15-21, 22-28, 29-fin).
+    Desde septiembre de 2026: de lunes a domingo. La primera semana del mes empieza el día 1
+    y termina el primer domingo, así que sale corta; la última también. Consecuencia que hay
+    que tener presente: un mes puede necesitar **6 filas** y no siempre 5 (en 2026: marzo,
+    agosto y noviembre). Nada puede dar por hecho que un bloque de mes ocupa 5 filas.
+    """
     n = calendar.monthrange(anio, mes)[1]
     out, d = [], 1
     while d <= n:
-        h = min(d + 6, n)
+        if (anio, mes) >= LUNES_DESDE:
+            # weekday(): lunes=0 … domingo=6. Lo que falta para llegar al domingo.
+            h = min(d + (6 - datetime.date(anio, mes, d).weekday()), n)
+        else:
+            h = min(d + 6, n)
         out.append((f"Del {d} al {h}", f"{anio}-{mes:02d}-{d:02d}", f"{anio}-{mes:02d}-{h:02d}"))
         d = h + 1
     return out
@@ -205,8 +230,13 @@ def bloque_formulas(ini, fin, r, marcas=None, excluir=None):
     """Fórmulas de una fila: SUMPRODUCT por rango de fechas sobre `datos`.
 
     Con `marcas`/`excluir` la fila deja de ser «la semana entera» y pasa a ser «la semana
-    de ESTE funnel» (ver `_filtro`). El fee no entra aquí: es un pago único mensual y va
-    en la fila TOTAL del mes, que es como se paga.
+    de ESTE funnel» (ver `_filtro`).
+
+    El FEE: en una fila de SEMANA entra PRORRATEADO POR DÍAS (ver `coste_total` abajo). En
+    una fila de FUNNEL no entra: «el fee es por los funnels, no es un fee por funnel»
+    (Dirección, 10-09-2026), así que ahí va entero y una sola vez en el TOTAL DEL MES. Son dos
+    casos distintos y por eso se tratan distinto: trocear un mes en el TIEMPO reparte un
+    coste que existe; trocearlo entre CANALES inventa uno que nadie factura.
     """
     por_funnel = bool(marcas or excluir)
     INV = X["Inversión"]
@@ -222,17 +252,30 @@ def bloque_formulas(ini, fin, r, marcas=None, excluir=None):
 
     g, im, al = s(C["gasto"]), s(C["impresiones"]), s(C["alcance"])
     ce, vl, ld = s(C["clics_enlace"]), s(C["vistas_landing"]), s(C["leads"])
-    coste_total = f"={INV}{r}"          # la semana solo lleva su inversión; el fee va en el TOTAL
+    # Coste total de la SEMANA = su inversión + la parte del fee que le toca, repartido por
+    # DÍAS y no a partes iguales: una semana de 3 días no puede cargar un mes entero de fee.
+    # La guarda `=0 → 0` es la misma que lleva la fila TOTAL: una semana sin inversión —las
+    # que aún no han llegado— no arrastra fee, o el mes en curso enseñaría un coste inventado.
+    # Las filas de FUNNEL se quedan sin fee a propósito (ver el docstring).
+    if por_funnel:
+        coste_total = f"={INV}{r}"
+    else:
+        d_ini = datetime.date.fromisoformat(ini)
+        dias = (datetime.date.fromisoformat(fin) - d_ini).days + 1
+        dias_mes = calendar.monthrange(d_ini.year, d_ini.month)[1]
+        coste_total = f"=IF({INV}{r}=0,0,{INV}{r}+{FEE}*{dias}/{dias_mes})"
     cie = f"${CIERRES_COL}{r}"          # lo que se escribe a mano en esa semana
+    man = f"${MANUAL_COL}{r}"           # el importe facturado, también a mano
 
     if por_funnel:
         # `ventas` NO se puede repartir por funnel: el CRM no dice de qué campaña vino la
         # venta. Si cada funnel mirase `ventas`, LOS DOS se apuntarían la misma factura y el
         # mes sumaría el doble. Las filas de funnel van por cierres a mano o estimación; el
         # dato real del CRM entra una sola vez, en el TOTAL DEL MES.
-        fac = (f'IF(N({cie})>0,N({cie})*{TICKET},'
-               f'IF(OR({TICKET}=0,{CIERRE}=0),0,{ld}*{CIERRE}*{TICKET}))')
-        origen = (f'IF({INV}{r}=0,"—",IF(N({cie})>0,"a mano",'
+        fac = (f'IF(N({man})>0,N({man}),'
+               f'IF(N({cie})>0,N({cie})*{TICKET},'
+               f'IF(OR({TICKET}=0,{CIERRE}=0),0,{ld}*{CIERRE}*{TICKET})))')
+        origen = (f'IF({INV}{r}=0,"—",IF(OR(N({man})>0,N({cie})>0),"a mano",'
                   f'IF(OR({TICKET}=0,{CIERRE}=0),"—","estimado")))')
     else:
         fact, nvent = sv(V["importe"]), cv()
@@ -241,11 +284,14 @@ def bloque_formulas(ini, fin, r, marcas=None, excluir=None):
         #   2. los cierres escritos a mano            → cierres × ticket medio
         #   3. la estimación                          → leads × % de cierre × ticket medio
         # Nunca se suman entre sí: manda uno y punto. La columna «Origen» dice cuál.
+        # El orden de mando: el CRM manda sobre lo escrito a mano, y lo escrito a mano
+        # sobre la estimación. Nunca se suman entre sí.
         fac = (f'IF({nvent}>0,{fact},'
+               f'IF(N({man})>0,N({man}),'
                f'IF(N({cie})>0,N({cie})*{TICKET},'
-               f'IF(OR({TICKET}=0,{CIERRE}=0),0,{ld}*{CIERRE}*{TICKET})))')
+               f'IF(OR({TICKET}=0,{CIERRE}=0),0,{ld}*{CIERRE}*{TICKET}))))')
         origen = (f'IF({INV}{r}=0,"—",IF({nvent}>0,"ventas",'
-                  f'IF(N({cie})>0,"a mano",'
+                  f'IF(OR(N({man})>0,N({cie})>0),"a mano",'
                   f'IF(OR({TICKET}=0,{CIERRE}=0),"—","estimado"))))')
 
     return [
@@ -256,8 +302,9 @@ def bloque_formulas(ini, fin, r, marcas=None, excluir=None):
         (f"=IFERROR({g}/{ld},0)", EURG),
         (f"=IFERROR({g}/{ce},0)", EURG),
         (None, ENTG),                       # Cierres: hueco para rellenar a mano, sin fórmula
+        (None, EURG),                       # Facturado (a mano): otro hueco, sin fórmula
         (f"={fac}", EURG),
-        (coste_total, EURG),                # Coste total de la SEMANA = su inversión
+        (coste_total, EURG),                # inversión + la parte del fee (prorrateada por días)
         # ROAS y ROAS mínimo leen la propia fila: se entienden de un vistazo y se recalculan
         # solos en cuanto se tocan los cierres, el ticket o el margen.
         (f'=IFERROR({X["Facturado"]}{r}/{X["Coste total"]}{r},0)', ROASG),  # sobre el COSTE TOTAL
@@ -282,6 +329,21 @@ def _comprobar_columnas():
             f"({len(COLS)-N_ETIQ} sin las de etiqueta) y {len(f)} fórmulas por fila.\n"
             f"   COLS: {[c[0] for c in COLS]}\n"
             f"   Cuadra las dos listas antes de generar nada.")
+    # Y la fila de TOTAL DEL MES, que es OTRA lista que hay que cambiar a la vez. El
+    # 15-09-2026 se añadió «Facturado (a mano)» a COLS y a las filas de semana pero no aquí:
+    # el total escribió cada cifra una columna a la izquierda y, al convertir a Google, la
+    # hoja salió con #REF!. En local el .xlsx parecía correcto, que es lo peor del caso.
+    if len(_CELDAS_TOTAL_PRUEBA()) != len(COLS) - N_ETIQ:
+        raise SystemExit(
+            f"⛔ La fila de TOTAL DEL MES tiene {len(_CELDAS_TOTAL_PRUEBA())} celdas y la "
+            f"tabla {len(COLS)-N_ETIQ} columnas. Cuadra `celdas_total` con COLS.")
+
+
+def _CELDAS_TOTAL_PRUEBA():
+    """Las celdas de un TOTAL DEL MES cualquiera, solo para contarlas."""
+    return [
+        ("", EURG), ("", ENTG), ("", PCTG), ("", ENTG), ("", ENTG), ("", EURG), ("", EURG),
+        ("", ENTG), ("", EURG), ("", EURG), ("", EURG), ("", ROASG), ("", ROASG), ("", None)]
 
 
 def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color=None):
@@ -320,19 +382,27 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
     # SOLO DOS se escriben a mano: el ticket medio y el margen. Nadie tiene por qué calcular un
     # porcentaje (Dirección, 10-09-2026): el «% que cierra» se DEDUCE de los cierres que se van
     # escribiendo cada semana, y al lado se ve el total de cierres del año.
-    F(ws, "A4", "PARA CALCULAR EL ROAS — solo las DOS primeras se rellenan a mano" if principal
+    F(ws, "A4", "PARA CALCULAR EL ROAS — aquí solo se rellena el MARGEN" if principal
       else "PARA CALCULAR EL ROAS — se leen de «Reporte Meta», aquí no se tocan",
       tam=9, bold=True, color=GRIS)
     # En la pestaña secundaria las tres celdas son FÓRMULAS que apuntan a «Reporte Meta»: una
     # sola fuente de verdad. Si se dejaran a mano, alguien cambiaría el ticket en una y no en
     # la otra y los dos ROAS dejarían de comparar lo mismo.
-    for ref_t, txt_t, ref_v, fmt in [("A5", "Ticket medio", "B6", EURG),
-                                     ("C5", "Margen", "D6", PCT0G)]:
-        F(ws, ref_t, f"{txt_t} (a mano)" if principal else f"{txt_t} (de «Reporte Meta»)",
-          tam=8, bold=True, color=GRIS)
-        F(ws, ref_v, 0 if principal else f"='Reporte Meta'!${ref_v[0]}$6",
-          tam=13, bold=True, color=NEGRO, fondo=A_MANO_BG if principal else None,
-          fmt=fmt, hor="right")
+    # El TICKET MEDIO ya no se pregunta: se deduce de lo que se va escribiendo, igual que
+    # el «% que cierra» (Dirección, 15-09-2026). Es «lo facturado a mano ÷ los cierres de esas
+    # mismas semanas». Su fórmula se escribe al final, cuando se sabe en qué filas quedaron
+    # las semanas. El MARGEN sigue a mano: es la estructura de costes del cliente y no hay
+    # forma de deducirla de la publicidad.
+    F(ws, "A5", "Ticket medio (se calcula)" if principal else "Ticket medio (de «Reporte Meta»)",
+      tam=8, bold=True, color=GRIS)
+    if not principal:
+        F(ws, "B6", "='Reporte Meta'!$B$6", tam=13, bold=True, color=NEGRO,
+          fmt=EURG, hor="right")
+    F(ws, "C5", "Margen (a mano)" if principal else "Margen (de «Reporte Meta»)",
+      tam=8, bold=True, color=GRIS)
+    F(ws, "D6", 0 if principal else "='Reporte Meta'!$D$6",
+      tam=13, bold=True, color=NEGRO, fondo=A_MANO_BG if principal else None,
+      fmt=PCT0G, hor="right")
     F(ws, "I5", "Fee de agencia al mes (a mano)" if principal
       else "Fee de agencia al mes (de «Reporte Meta»)", tam=8, bold=True, color=GRIS)
     F(ws, "J6", FEE_DEF if principal else "='Reporte Meta'!$J$6",
@@ -342,15 +412,16 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
                          ("G5", "% que cierra (se calcula)")]:
         F(ws, ref_t, txt_t, tam=8, bold=True, color=GRIS)
     # Las fórmulas se escriben al final, cuando ya se sabe en qué filas quedaron los totales.
-    F(ws, "L5", "Se rellenan el TICKET MEDIO, el MARGEN y el FEE, una vez. Después, cada semana, "
-                "el NÚMERO de cierres en la columna «Cierres (a mano)». Los cierres totales y el "
-                "% que cierra salen solos de ahí. El ROAS se calcula sobre el COSTE TOTAL (inversión + la parte del fee que toca a esa semana), no sobre la inversión sola. La columna «Origen» dice, en cada "
+    F(ws, "L5", "Se rellena el MARGEN una vez (el fee ya viene puesto: 1.100 €). Después, cada "
+                "semana, el NÚMERO de cierres y el IMPORTE facturado, en las dos columnas azules. "
+                "El ticket medio, los cierres totales y el % que cierra salen solos de ahí. El ROAS se calcula sobre el COSTE TOTAL (inversión + la parte del fee que toca a esa semana), no sobre la inversión sola. La columna «Origen» dice, en cada "
                 "fila, si la cifra es un cierre vuestro o una estimación.",
       tam=8, color=GRIS, italic=True)
     ws.row_dimensions[6].height = 22
 
     r = 8
     filas_total = []                    # las filas «TOTAL <MES>», para sumar el año entero
+    bloques = []                        # (primera, última) fila de SEMANA de cada mes
     for mes in meses:
         ws.merge_cells(f"A{r}:{ultima}{r}")
         F(ws, f"A{r}", f"  {MESES[mes].upper()} {anio}", tam=11, bold=True,
@@ -379,7 +450,7 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
                 celdas, _ = bloque_formulas(d1, d2, r, marcas=marcas)
                 for j, (v, fmt) in enumerate(celdas, start=N_ETIQ + 1):
                     letra = get_column_letter(j)
-                    editable = letra == CIERRES_COL
+                    editable = letra in (CIERRES_COL, MANUAL_COL)
                     F(ws, f"{letra}{r}", v, tam=9, fmt=fmt,
                       hor="center" if letra == ORIGEN_COL else "right",
                       color=GRIS if letra == ORIGEN_COL else NEGRO,
@@ -388,6 +459,7 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
                 filas_fn.setdefault(fn, []).append(r)
                 r += 1
         ultima_fila = r - 1
+        bloques.append((primera, ultima_fila))
 
         # ---- Totales del mes ----------------------------------------------------------
         # Con funnels son: una fila por funnel, una de «Sin clasificar» y el TOTAL DEL MES.
@@ -417,6 +489,8 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
                 (f"=IFERROR(({G})/({IM}),0)", PCTG), (f"={G}", ENTG), (f"={H}", ENTG),
                 (f"=IFERROR(({B})/({H}),0)", EURG), (f"=IFERROR(({B})/({G}),0)", EURG),
                 (f"={CIE}" if CIE else "", ENTG),
+                ("", EURG),                 # «Facturado (a mano)»: en el total no se suma,
+                                            # el importe del mes ya sale en «Facturado»
                 (f"={FA}" if FA else "", EURG),
                 (f"={CT}" if CT else "", EURG),
                 (f"=IFERROR(({FA})/({CT}),0)" if FA else "", ROASG),
@@ -498,6 +572,17 @@ def hoja_reporte(wb, titulo, cliente, cuenta, anio, meses, principal=True, color
     # «% que cierra» habría dividido los cierres entre el CPC, sin dar ningún error.
     leads_tot = "+".join(f'N({X["Clientes potenciales"]}{f})' for f in filas_total) or "0"
     F(ws, "F6", f"={cierres_tot}", tam=13, bold=True, color=NEGRO, fmt=ENTG, hor="right")
+    # TICKET MEDIO = lo facturado a mano ÷ los cierres de LAS MISMAS semanas. Se cuentan solo
+    # los cierres de semanas que además llevan importe: si no, una semana con 2 cierres y sin
+    # importe rebajaría el ticket como si esos dos cierres hubieran facturado 0 €.
+    # Se recorre mes a mes y NO la columna entera, que incluiría las filas de TOTAL y contaría
+    # cada semana dos veces.
+    if principal:
+        fact_tot = "+".join(f"SUM({MANUAL_COL}{a}:{MANUAL_COL}{b})" for a, b in bloques) or "0"
+        cie_con = "+".join(f"SUMPRODUCT(({MANUAL_COL}{a}:{MANUAL_COL}{b}>0)*"
+                           f"N({CIERRES_COL}{a}:{CIERRES_COL}{b}))" for a, b in bloques) or "0"
+        F(ws, "B6", f"=IFERROR(({fact_tot})/({cie_con}),0)", tam=13, bold=True,
+          color=NEGRO, fmt=EURG, hor="right")
     F(ws, "H6", f"=IFERROR(({cierres_tot})/({leads_tot}),0)", tam=13, bold=True,
       color=NEGRO, fmt=PCT0G, hor="right")
 
@@ -588,9 +673,11 @@ def datos_a_mano(sheet_id):
         # % que cierra), y a_mano() las descarta sola. El que sí hay que proteger es el
         # FEE: entra en el ROAS de las dos pestañas, así que perderlo falsea el número
         # sin que se note. Solo cuenta si lo han cambiado respecto del que se pone al crear.
-        for ref, que in (("B6", "ticket medio"), ("D6", "margen")):
-            if a_mano(ws[ref].value):
-                fuera.append(f"{hoja} · {que} ({ref}): {ws[ref].value}")
+        # B6 ya NO se mira: desde el 15-09-2026 el ticket medio es una fórmula que sale de
+        # lo facturado a mano. a_mano() la descarta sola, pero dejarla en la lista haría que
+        # la guarda saltara siempre en cuanto hubiera un solo importe escrito.
+        if a_mano(ws["D6"].value):
+            fuera.append(f"{hoja} · margen (D6): {ws['D6'].value}")
         fee = ws["J6"].value
         if a_mano(fee) and fee != FEE_DEF:
             fuera.append(f"{hoja} · fee de agencia (J6): {fee} — distinto del de por defecto")
@@ -599,10 +686,11 @@ def datos_a_mano(sheet_id):
         def es_semana(f):
             v = ws[f"A{f}"].value
             return isinstance(v, str) and v.strip().lower().startswith("del ")
-        n = sum(1 for f in range(1, ws.max_row + 1)
-                if es_semana(f) and a_mano(ws[f"{CIERRES_COL}{f}"].value))
-        if n:
-            fuera.append(f"{hoja} · {n} semana(s) con cierres escritos en la columna «Cierres»")
+        for col, que in ((CIERRES_COL, "cierres"), (MANUAL_COL, "importes facturados")):
+            n = sum(1 for f in range(1, ws.max_row + 1)
+                    if es_semana(f) and a_mano(ws[f"{col}{f}"].value))
+            if n:
+                fuera.append(f"{hoja} · {n} semana(s) con {que} escritos a mano")
     if "ventas" in wb.sheetnames:
         ws = wb["ventas"]
         n = sum(1 for f in range(2, ws.max_row + 1) if a_mano(ws[f"B{f}"].value))

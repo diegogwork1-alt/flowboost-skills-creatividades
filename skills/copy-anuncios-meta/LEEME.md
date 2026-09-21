@@ -7,7 +7,7 @@
 
 Escribe el COPY de un anuncio de Meta (texto primario + título + descripción + botón CTA) basándose en el ESTÁTICO (la imagen del anuncio: la produce la skill `estaticos-meta` con el GPT) y el GUION del video de ese anuncio, más el contexto del brief del cliente. Copy corto y persuasivo estilo Ogilvy (respuesta directa).
 
-## Antes de empezar necesitás
+## Antes de empezar necesitas
 
 - **El paquete `fundamentos` instalado al lado** (`npx skills add <usuario-github>/flowboost-skills-fundamentos --copy`). Esta skill lee Ogilvy, Schwartz y el compliance de Meta desde `../fundamentos-copy/`. **Si no está, la skill funciona a medias y NO avisa.**
 - La skill **`estaticos-meta`** (paquete *creatividades*): lee ficheros suyos.
@@ -38,4 +38,4 @@ Google Drive del cliente (solo lectura salvo entregables).
 
 ---
 
-*Generado el 10-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
+*Generado el 21-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
