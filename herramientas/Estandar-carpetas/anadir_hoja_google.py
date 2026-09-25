@@ -225,9 +225,13 @@ def pestana_reporte(wb, cliente, anio, desde_mes):
         F(ws, f"A{fila}", "TOTAL DEL MES", tam=10, bold=True, color=BLANCO, fondo=ROSA)
         filas_total.append(fila)
         ult = fila - 1
-        S = lambda letra: f"SUM({letra}{primera}:{letra}{ult})"
-        inv, imp, cli = S("B"), S("C"), S("D")
-        leads, fact = S("H"), S("K")
+        # Por NOMBRE de columna, nunca por letra fija: el 21-09-2026 se añadió «Facturado
+        # (a mano)» a COLS_G y, con las letras a pelo, la fila de TOTAL quedó corrida — el
+        # ROAS acabó escrito en la casilla de «Coste total», que salía 0.
+        L = {c[0]: get_column_letter(i + 1) for i, c in enumerate(COLS_G)}
+        S = lambda nombre: f"SUM({L[nombre]}{primera}:{L[nombre]}{ult})"
+        inv, imp, cli = S("Inversión"), S("Impresiones"), S("Clics")
+        leads, fact = S("Clientes potenciales"), S("Facturado")
         totales = [
             (f"={inv}", EURG), (f"={imp}", ENTG), (f"={cli}", ENTG),
             (f"=IFERROR({cli}/{imp},0)", PCTG),          # CTR
@@ -235,7 +239,9 @@ def pestana_reporte(wb, cliente, anio, desde_mes):
             (f"={cuota_prom(mes_ini, mes_fin)}", PCT0G),  # cuota: media de los días del mes
             (f"={leads}", ENTG),
             (f"=IFERROR({inv}/{leads},0)", EURG),        # coste por lead
-            (f"={S('J')}", ENTG), (f"={fact}", EURG),
+            (f"={S('Cierres (a mano)')}", ENTG),
+            (f"={S('Facturado (a mano)')}", EURG),
+            (f"={fact}", EURG),
             # Coste total del mes = inversión del mes + el fee ENTERO, una sola vez (es un
             # pago único mensual). Sin inversión en todo el mes no hubo servicio: tampoco fee.
             (f"=IF({inv}=0,0,{inv}+{FEE})", EURG),
@@ -243,6 +249,11 @@ def pestana_reporte(wb, cliente, anio, desde_mes):
             (f"=IFERROR(1/{MARGEN},0)", ROASG),
             ("", None),                                  # «Origen»: no aplica al total
         ]
+        if len(totales) != len(COLS_G) - 1:
+            raise SystemExit(
+                f"⛔ La fila de TOTAL no cuadra con COLS_G: {len(totales)} valores para "
+                f"{len(COLS_G)-1} columnas. Así se escribe cada fórmula en la casilla de al "
+                f"lado (el 21-09-2026 el ROAS acabó en «Coste total»). Cuadra las dos listas.")
         for j, (v, fmt) in enumerate(totales, start=2):
             F(ws, f"{get_column_letter(j)}{fila}", v, tam=10, bold=True, color=BLANCO,
               fondo=ROSA, fmt=fmt, hor="right")

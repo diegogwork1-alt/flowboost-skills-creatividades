@@ -15,7 +15,7 @@ AREA = {"fundamentos-copy":"fundamentos",
  "editar-vsl-cliente":"video","editar-ad-meta-9x16":"video",
  "armar-campana-meta":"meta-ads","gestion-cuenta-meta":"meta-ads",
  "keywords-google-ads":"meta-ads","reportes-cliente":"meta-ads",
- "funnel":"direccion","montar-crm-cliente":"direccion","informe-landing-clarity":"direccion"}
+ "contenido-organico":"organico","funnel":"direccion","montar-crm-cliente":"direccion","informe-landing-clarity":"direccion"}
 for s in ["landing-b2b-alto-ticket","landing-b2b-copy-html","landing-b2b-index-html","landing-conversion",
  "landing-conversion-copy-html","landing-inmueble-copy-html","landing-vsl-directa",
  "landing-vsl-directa-copy-html","landing-vsl-directa-index-html","copy-b2b-alto-ticket",
@@ -23,6 +23,18 @@ for s in ["landing-b2b-alto-ticket","landing-b2b-copy-html","landing-b2b-index-h
 
 # Lo que NO se deduce del código: sale de las decisiones de Dirección. Formato: (necesita, prohibido, ojo)
 NOTAS = {
+"contenido-organico": dict(
+ necesita=["El **brief real** del cliente. Es lo único que la skill pide; sin brief no arranca.",
+   "**NotebookLM operativo** (`notebooklm login`): monta una libreta de intereses por cliente. Si no hay acceso, sigue con búsqueda directa y lo anota.",
+   "Saber **qué cuentas tiene abiertas** el cliente y **quién puede salir en cámara**."],
+ prohibido=["⛔ **LinkedIn.** Decisión de Dirección (21-09-2026): las plataformas son Instagram, TikTok y Facebook.",
+   "⛔ **Cebo de interacción** («comenta SÍ», «escribe GUÍA y te lo mando»): lo penalizan las tres plataformas.",
+   "⛔ **«Enlace en la bio»** como CTA: muerto desde abril de 2026.",
+   "⛔ Republicar contenido ajeno o subir vídeo con marca de agua de otra red: saca la cuenta de las recomendaciones."],
+ ojo=["**El vídeo nace en TikTok.** A las 48 h, lo que pasa el listón se adapta a Reel de Instagram y después a Reel de Facebook de 90 s. Nunca a la vez en dos redes.",
+   "**Los Trial Reels prueban el gancho**, una sola variable por prueba, y se comparan solo entre ellos.",
+   "**La base de investigación caduca a los 3 meses**: en 2026 los algoritmos cambiaron casi cada mes. La fecha está en la cabecera de `references/base-investigacion.md`.",
+   "**Capacidad por defecto: 4 piezas únicas por semana.** Las adaptaciones a otra red no cuentan como pieza."]),
 "estaticos-meta": dict(
  necesita=["El **brief real** del cliente (`0. Onboarding/Brief_<Cliente>.pdf`) **convertido a TXT** con `brief_a_texto.py` — el PDF a veces no sube al GPT y falla en silencio.",
    "**Branding de Drive** (`1. Branding`): logo oficial, paleta y tipografías del MANUAL, no de un anuncio viejo. Si falta, se pide; no se inventa la marca.",

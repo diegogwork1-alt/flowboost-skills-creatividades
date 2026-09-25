@@ -61,4 +61,4 @@ Google Drive del cliente (solo lectura salvo entregables), cuenta de Meta Ads â€
 
 ---
 
-*Generado el 21-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
+*Generado el 25-09-2026 desde el sistema de Flowboost. Se regenera con `gen_leeme.py`; no editar a mano.*
